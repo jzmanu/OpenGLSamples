@@ -1,4 +1,4 @@
-package com.manu.openglsamples.triangle
+package com.manu.openglsamples.sample
 
 import android.content.Context
 import android.opengl.GLES20
@@ -8,13 +8,13 @@ import com.manu.openglsamples.util.GLUtil
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
-
+import java.nio.ShortBuffer
 /**
- * @Desc:Triangle
+ * @Desc: 矩形
  * @Author: jzman
- * @Date: 2021/7/3 18:49.
+ * @Date: 2021/8/1.
  */
-class Triangle(context: Context) {
+class Square(context: Context) {
     companion object {
         // 坐标数组中每个顶点的坐标数
         private const val COORDINATE_PER_VERTEX = 3
@@ -26,36 +26,49 @@ class Triangle(context: Context) {
     private var vPMatrixHandle: Int = 0
     private var vertexStride = COORDINATE_PER_VERTEX * 4
 
-    // 三角形的三条边
-    private var triangleCoordinate = floatArrayOf(     // 逆时针的顺序的三条边
-        0.0f, 0.5f, 0.0f,      // top
-        -0.5f, -0.5f, 0.0f,    // bottom left
-        0.5f, -0.5f, 0.0f      // bottom right
+    private var squareCoordinates = floatArrayOf(
+        -0.5f, 0.5f, 0.0f,      // top left
+        -0.5f, -0.5f, 0.0f,     // bottom left
+        0.5f, -0.5f, 0.0f,      // bottom right
+        0.5f, 0.5f, 0.0f        // top right
     )
+
+    private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3) // order to draw vertices
 
     // 颜色数组
     private val color = floatArrayOf(0.63671875f, 0.76953125f, 0.22265625f, 1.0f)
-    private var vertexBuffer: FloatBuffer =
-        // (number of coordinate values * 4 bytes per float)
-        ByteBuffer.allocateDirect(triangleCoordinate.size * 4).run {
-            // ByteBuffer使用本机字节序
-            this.order(ByteOrder.nativeOrder())
-            // ByteBuffer to FloatBuffer
-            this.asFloatBuffer().apply {
-                put(triangleCoordinate)
+
+    // initialize vertex byte buffer for shape coordinates
+    private val vertexBuffer: FloatBuffer =
+        // (# of coordinate values * 4 bytes per float)
+        ByteBuffer.allocateDirect(squareCoordinates.size * 4).run {
+            order(ByteOrder.nativeOrder())
+            asFloatBuffer().apply {
+                put(squareCoordinates)
+                position(0)
+            }
+        }
+
+    // initialize byte buffer for the draw list
+    private val drawListBuffer: ShortBuffer =
+        // (# of coordinate values * 2 bytes per short)
+        ByteBuffer.allocateDirect(drawOrder.size * 2).run {
+            order(ByteOrder.nativeOrder())
+            asShortBuffer().apply {
+                put(drawOrder)
                 position(0)
             }
         }
 
     init {
         val vertexShaderCode:String? = if (Config.DEFAULT){
-            GLUtil.readShaderSourceCodeFromRaw(context, R.raw.vertex_shader_triangle_default)
+            GLUtil.readShaderSourceCodeFromRaw(context, R.raw.vertex_shader_square_default)
         }else{
-            GLUtil.readShaderSourceCodeFromRaw(context, R.raw.vertex_shader_triangle)
+            GLUtil.readShaderSourceCodeFromRaw(context, R.raw.vertex_shader_square)
         }
 
         val fragmentShaderCode =
-            GLUtil.readShaderSourceCodeFromRaw(context, R.raw.fragment_shader_triangle)
+            GLUtil.readShaderSourceCodeFromRaw(context, R.raw.fragment_shader_square)
         if (vertexShaderCode.isNullOrEmpty() || fragmentShaderCode.isNullOrEmpty()) {
             throw RuntimeException("vertexShaderCode or fragmentShaderCode is null or empty")
         }
@@ -92,8 +105,9 @@ class Triangle(context: Context) {
             GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0)
         }
 
-        // draw triangle
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, triangleCoordinate.size / COORDINATE_PER_VERTEX)
+        // draw square
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES,drawOrder.size, GLES20.GL_UNSIGNED_SHORT,drawListBuffer)
         GLES20.glDisableVertexAttribArray(positionHandle)
     }
 }
+    

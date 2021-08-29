@@ -6,12 +6,12 @@ import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.util.Log
 import com.manu.openglsamples.common.Config
-import com.manu.openglsamples.triangle.Triangle
+import com.manu.openglsamples.sample.Triangle
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class MRenderer(private var context: Context) : GLSurfaceView.Renderer {
-    private val tag = MRenderer::class.java.simpleName
+class TriangleRenderer(private var context: Context) : GLSurfaceView.Renderer {
+    private val tag = TriangleRenderer::class.java.simpleName
     private lateinit var triangle: Triangle
     private val vPMatrix = FloatArray(16) // 模型视图投影矩阵
     private val projectionMatrix = FloatArray(16)
